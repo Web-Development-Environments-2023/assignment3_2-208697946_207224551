@@ -17,6 +17,25 @@ tags:
 - name: Recipes
   description: All reciepes general info
 paths:
+  /recipes/main:
+    get:
+      tags:
+      - Recipes
+      summary: Main page of the site
+      description: display 3 random recipes. for logged users - 3 recent viewed recipes, for un-logged users - register/login button. 
+      responses:
+        "200":
+          description: main page loaded successfuly
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipePreview'
+        "401":
+          description: error loading main page.
+      security:
+      - cookieAuth: []
   /register:
     post:
       tags:
@@ -98,9 +117,9 @@ paths:
             schema:
               type: object
               properties:
-                reciepeId:
+                recipeId:
                   type: string
-                  description: reciepe's id which the user saved
+                  description: recipe's id which the user saved
                   example: 716429
       responses:
         "200":
@@ -162,6 +181,13 @@ components:
           type: string
           description: password conatins between 5 to 10 chars, at least one of them
             is a number and a special char
+          format: password
+          example: my_name@12
+        password2:
+          maxLength: 10
+          minLength: 5
+          type: string
+          description: password confiramation
           format: password
           example: my_name@12
         email:
