@@ -12,13 +12,11 @@ router.use(async function (req, res, next) {
   if (req.session && req.session.user_id) {
     DButils.execQuery("SELECT username FROM users").then((users) => {
       if (users.find((x) => x.username === req.session.user_id)) {
-        console.log("yes")
         req.user_id = req.session.user_id;
         next();
       }
     }).catch(err => next(err));
   } else {
-    console.log("no")
     res.sendStatus(401);
   }
 });
@@ -41,16 +39,68 @@ router.post('/favorites', async (req,res,next) => {
 /**
  * This path returns the favorites recipes that were saved by the logged-in user
  */
-// what to return ?? 
 router.get('/favorites', async (req,res,next) => {
   try{
     const user_id = req.session.user_id;
-    let favorite_recipes = {};
     const recipes_id = await user_utils.getFavoriteRecipes(user_id);
     let recipes_id_array = [];
     recipes_id.map((element) => recipes_id_array.push(element.recipe_id)); //extracting the recipe ids into array
+    const results = await recipe_utils.getRecipesPreview(user_id, recipes_id_array, true);
+    res.status(200).send(results);
+  } catch(error){
+    next(error); 
+  }
+});
+
+/**
+ * This path is for creating a new recipe 
+ */
+router.post("/myRecipes", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const result = await DButils.execQuery(`SELECT COUNT(*) AS record_count FROM recipes`);
+    const id = result[0].record_count + 1;
+    const recipe_id = 'U' + id;
+    
+    let { title, image, readyInMinutes , vegetarian, vegan , glutenFree, ingredients, instructions, servings} = req.body;
+    let ingredientsJSON = JSON.stringify(ingredients);
+    let query = `INSERT INTO Recipes VALUES ('${user_id}','${recipe_id}','${title}','${image}','${readyInMinutes}','${vegetarian}','${vegan}', '${glutenFree}','${ingredientsJSON}','${instructions}','${servings}')`;
+    await DButils.execQuery(query);
+    res.status(201).send("A new recipe has been added");
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * This path returns the recipes that was created by the logged-in user
+ */
+
+router.get('/myRecipes', async (req,res,next) => {
+  try{
+    const user_id = req.session.user_id;
+    const myRecipes = await user_utils.getmyRecipes(user_id);
+    let myRecipes_array = [];
+    myRecipes.map((element) => myRecipes_array.push({recipe_id: element.recipe_id , title: element.title, readyInMinutes: element.readyInMinutes, image: element.image, vegan: element.vegan , vegetarian: element.vegetarian, glutenFree: element.glutenFree})); 
     //const results = await recipe_utils.getRecipesPreview(recipes_id_array);
-    res.status(200).send(recipes_id_array);
+    res.status(200).send(myRecipes_array);
+  } catch(error){
+    next(error); 
+  }
+});
+
+router.get('/myFamilyRecipes', async (req,res,next) => {
+  try{
+    const user_id = req.session.user_id;
+    let recipes = await DButils.execQuery(`SELECT * from familyrecipes WHERE user_id='${user_id}'`);
+
+    if (recipes.length === 0){
+      res.status(404).send("no results were found.");
+    }
+    else{
+      res.status(200).send(recipes);
+    }
   } catch(error){
     next(error); 
   }

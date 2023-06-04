@@ -87,6 +87,61 @@ paths:
       responses:
         "200":
           description: "the user has ben successfully logged out"
+  /users/myFamilyRecipes:
+    get:
+      tags:
+      - Users
+      summary: Return family recipes of the user
+      description: details about family recipes.
+      responses:
+        "200":
+          description: details about family recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FamilyRecipe'
+        "404":
+          description: no results were found.
+      security:
+      - cookieAuth: []
+  /users/myRecipes:
+    get:
+      tags:
+      - Users
+      summary: Return the recipes that was created by the user
+      description: Get an array of recipes that was created by a specific user
+      responses:
+        "200":
+          description: data about the recipes that created by the user returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipePreview'
+        "401":
+          description: user is not authorized
+      security:
+      - cookieAuth: []
+    post:
+      tags:
+      - Users
+      summary: user added a new recepie
+      description: user added a new recepie.
+      requestBody:
+        description: recipe to add
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRecipe'
+        required: true
+      responses:
+        "201":
+          description: A new recipe has been added
+        "400":
+          description: wrong input parameters
   /users/favorites:
     get:
       tags:
@@ -128,6 +183,62 @@ paths:
           description: user is not authorized
       security:
       - cookieAuth: []
+  /recipes/search:
+    get:
+      tags:
+      - Recipes
+      summary: Return search results
+      description: Return preview details on recipes from searcg results
+      parameters:
+      - name: query
+        in: query
+        description: query words
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: cuisine
+        in: query
+        description: filter results by cuisine
+        required: false
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: diet
+        in: query
+        description: filter results by diet
+        required: false
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: intolerance
+        in: query
+        description: filter results by intolerance
+        required: false
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: results_num
+        in: query
+        description: how many results to retrieve 5/10/15
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: found relevant results for the search
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipePreview'
+        "404":
+          description: no results were found. 
   /recipes/{recipeId}:
     get:
       tags:
@@ -142,7 +253,7 @@ paths:
         style: simple
         explode: false
         schema:
-          type: integer
+          type: string
       responses:
         "200":
           description: data about the recipe
@@ -253,4 +364,85 @@ components:
           type: boolean
           description: indication if the recipe is gluten free
           example: false
+    NewRecipe:
+      type: object
+      properties:
+        title:
+          type: string
+          description: recipe name
+          example: Simple Macaroni and Cheese
+        image:
+          type: string
+          description: recipe image
+          format: URL
+          example: https://spoonacular.com/recipeimages/655455-566x370.jpg
+        readyInMinutes:
+          type: integer
+          description: the time takes to make this recipe
+          example: 45
+        vegetarian:
+          type: boolean
+          description: indication if the recipe is vegetarian
+          example: false
+        vegan:
+          type: boolean
+          description: indication if the recipe is vegan
+          example: false
+        glutenFree:
+          type: boolean
+          description: indication if the recipe is gluten free
+          example: false
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              amount:
+                type: number
+          description: ingridiants for the recipe
+          example: [ {name: "onion" , amount: 2}, {name: "milk", amount: 1} ]
+        instructions:
+          type: string
+          description: how to make the recipe
+          example: mix all the ingridiants in a bowl ... 
+        servings:
+         type: integer
+         description: how many servings from this recipe
+         example: 2
+    FamilyRecipe:
+      type: object
+      properties:
+        title:
+          type: string
+          description: recipe name
+          example: Simple Macaroni and Cheese
+        owner:
+          type: string
+          description: who makes this recipe
+          example: Grandmother
+        whenToCook:
+          type: string
+          description: when you make this recipe
+          example: on holidays
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              amount:
+                type: number
+          description: ingridiants for the recipe
+          example: [ {name: "onion" , amount: 2}, {name: "milk", amount: 1} ]
+        instructions:
+          type: string
+          description: how to make the recipe
+          example: mix all the ingridiants in a bowl ... 
+
+
+
+
   

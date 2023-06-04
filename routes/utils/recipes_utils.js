@@ -1,7 +1,7 @@
 const axios = require("axios");
 const api_domain = "https://api.spoonacular.com/recipes";
-
-
+const DButils = require("./DButils");
+const user_utils = require("./user_utils");
 
 /**
  * Get recipes list from spooncular response and extract the relevant recipe data for preview
@@ -18,12 +18,49 @@ async function getRecipeInformation(recipe_id) {
     });
 }
 
-async function getRecipesPreview(recipes_id_array) {
+async function isRecipeViewed(user_id, recipe_id){
+    let viewed = false;
+    viewed = await user_utils.getRecipeViews(user_id , recipe_id);
+    return viewed;
+}
+
+async function isRecipeFavorite(user_id, recipe_id){
+    let favorite = false;
+    let favorites = await user_utils.getFavoriteRecipes(user_id);
+    favorite = favorites.some((favorite) => String(favorite.recipe_id) === String(recipe_id));
+    return favorite;  
+}
+
+
+
+async function getRecipesPreview(user_id , recipes_id_array, is_favorite = false) {
+
     let recipes = [];
+    let Watched = false;
     await Promise.all(
       recipes_id_array.map(async (recipe_id) => {
-        const recipeInfo = await getRecipeInformation(recipe_id);
-        recipes.push(recipeInfo);
+        let recipeInfo = await getRecipeInformation(recipe_id);
+        if (user_id != null){
+            Watched = await isRecipeViewed(user_id, recipe_id);
+            if( is_favorite === false){
+                is_favorite = await isRecipeFavorite(user_id, recipe_id);
+            }
+        }
+ 
+        let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = recipeInfo.data;
+
+        recipes.push({
+            id: id,
+            title: title,
+            readyInMinutes: readyInMinutes,
+            image: image,
+            popularity: aggregateLikes,
+            vegan: vegan,
+            vegetarian: vegetarian,
+            glutenFree: glutenFree,
+            Watched: Watched,
+            is_favorite: is_favorite
+        });
       })
     );
     return recipes;
@@ -45,12 +82,39 @@ async function getRandomRecipes() {
     
 }
 
+async function SearchRecipes(user_id, query ,cuisine, diet , intolorence , number) {
+    let search_results =  await axios.get(`${api_domain}/complexSearch`, {
+        params: {
+            query: query,
+            cuisine:cuisine ,
+            diet: diet,
+            intolerances:intolorence,
+            number:number,
+            instructionsRequired: true,
+            apiKey: process.env.spooncular_apiKey
+        }
+    });
+    let recipes_array = [];
+    recipes_array = search_results.data.results;
+    const newArray = recipes_array.map(item => {
+        return item.id
+      });
+    let res = [];
+    res = getRecipesPreview(user_id, newArray);
+    return res;
+}
 
-async function getRecipeDetails(recipe_id) {
+
+async function getRecipeFullDetails(user_id, recipe_id) {
     let recipe_info = await getRecipeInformation(recipe_id);
-    console.log(recipe_info.data);
-    let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = recipe_info.data;
-
+    let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree , servings , instructions, extendedIngredients } = recipe_info.data;
+    let ingredients = extendedIngredients.map(({ name, amount }) => ({ name, amount }));
+    let Watched = false;
+    let is_favorite = false;
+    if (user_id != null){
+        Watched = await isRecipeViewed(user_id, recipe_id);
+        is_favorite = await isRecipeFavorite(user_id, recipe_id); 
+    }
     return {
         id: id,
         title: title,
@@ -60,14 +124,20 @@ async function getRecipeDetails(recipe_id) {
         vegan: vegan,
         vegetarian: vegetarian,
         glutenFree: glutenFree,
-        
+        ingredients: ingredients,
+        instructions: instructions,
+        servings: servings,
+        watched: Watched,
+        is_favorite: is_favorite
     }
 }
 
 
-exports.getRecipeDetails = getRecipeDetails;
+
+exports.getRecipeFullDetails = getRecipeFullDetails;
 exports.getRandomRecipes = getRandomRecipes;
 exports.getRecipesPreview = getRecipesPreview;
+exports.SearchRecipes = SearchRecipes;
 
 
 
