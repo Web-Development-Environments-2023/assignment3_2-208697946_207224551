@@ -24,10 +24,10 @@ router.get("/main", async (req, res, next) => {
        const lastThreeRecipesids = result.map((item) => item.recipe_id);
        const lastThreeRecipes = await recipes_utils.getRecipesPreview(req.session.user_id, lastThreeRecipesids);
       
-       res.send({random_recipes, lastThreeRecipes});
+       res.status(200).send({random_recipes, lastThreeRecipes});
     }
     else{
-      res.send(random_recipes);
+      res.status(200).send(random_recipes);
     }
     
   } catch (error) {
@@ -47,10 +47,10 @@ router.get("/search", async (req, res, next) => {
 
     const search_res = await recipes_utils.SearchRecipes(user_id , req.query.query, req.query.cuisine, req.query.diet , req.query.intolerance, req.query.results_num);
     if (search_res.length === 0){
-      res.send("No Results");
+      throw { status: 404, message: "no results were found" };
     }
     else{
-      res.send(search_res);
+      res.status(200).send(search_res);
     }
   } catch (error) {
     next(error);
@@ -74,7 +74,12 @@ router.get("/:recipeId", async (req, res, next) => {
     const recipe_id = String(req.params.recipeId);
     if (recipe_id.includes('U')){
         recipe = await DButils.execQuery(`SELECT recipe_id, title, image, readyInMinutes, vegetarian ,vegan, glutenFree, ingredients, instructions, servings FROM recipes where recipe_id='${recipe_id}'`);
-        recipe = recipe[0];
+        if (recipe.length == 0){
+          recipe = null;
+        }
+        else{
+          recipe = recipe[0];
+        }
     }
     else{
       recipe = await recipes_utils.getRecipeFullDetails(user_id, recipe_id);
@@ -91,7 +96,12 @@ router.get("/:recipeId", async (req, res, next) => {
         }
       }
     }
-    res.send(recipe);
+    if (recipe == null){
+      throw { status: 404, message: "no results were found" };
+    }
+    else{
+      res.status(200).send(recipe);
+    }
   }
   catch (error){
     next(error);

@@ -10,12 +10,21 @@ const user_utils = require("./user_utils");
 
 
 async function getRecipeInformation(recipe_id) {
-    return await axios.get(`${api_domain}/${recipe_id}/information`, {
-        params: {
-            includeNutrition: false,
-            apiKey: process.env.spooncular_apiKey
+    try{
+        return await axios.get(`${api_domain}/${recipe_id}/information`, {
+            params: {
+                includeNutrition: false,
+                apiKey: process.env.spooncular_apiKey
+            }
+        });
+    }
+    catch(error){
+        if (error.response && error.response.status === 404) {
+            throw { status: 404, message: "no results were found" };
+
         }
-    });
+    }
+
 }
 
 async function isRecipeViewed(user_id, recipe_id){
@@ -106,29 +115,34 @@ async function SearchRecipes(user_id, query ,cuisine, diet , intolorence , numbe
 
 
 async function getRecipeFullDetails(user_id, recipe_id) {
-    let recipe_info = await getRecipeInformation(recipe_id);
-    let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree , servings , instructions, extendedIngredients } = recipe_info.data;
-    let ingredients = extendedIngredients.map(({ name, amount }) => ({ name, amount }));
-    let Watched = false;
-    let is_favorite = false;
-    if (user_id != null){
-        Watched = await isRecipeViewed(user_id, recipe_id);
-        is_favorite = await isRecipeFavorite(user_id, recipe_id); 
+    try{
+        let recipe_info = await getRecipeInformation(recipe_id);
+        let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree , servings , instructions, extendedIngredients } = recipe_info.data;
+        let ingredients = extendedIngredients.map(({ name, amount }) => ({ name, amount }));
+        let Watched = false;
+        let is_favorite = false;
+        if (user_id != null){
+            Watched = await isRecipeViewed(user_id, recipe_id);
+            is_favorite = await isRecipeFavorite(user_id, recipe_id); 
+        }
+        return {
+            id: id,
+            title: title,
+            readyInMinutes: readyInMinutes,
+            image: image,
+            popularity: aggregateLikes,
+            vegan: vegan,
+            vegetarian: vegetarian,
+            glutenFree: glutenFree,
+            ingredients: ingredients,
+            instructions: instructions,
+            servings: servings,
+            watched: Watched,
+            is_favorite: is_favorite
+        }
     }
-    return {
-        id: id,
-        title: title,
-        readyInMinutes: readyInMinutes,
-        image: image,
-        popularity: aggregateLikes,
-        vegan: vegan,
-        vegetarian: vegetarian,
-        glutenFree: glutenFree,
-        ingredients: ingredients,
-        instructions: instructions,
-        servings: servings,
-        watched: Watched,
-        is_favorite: is_favorite
+    catch(error){
+        throw(error);
     }
 }
 

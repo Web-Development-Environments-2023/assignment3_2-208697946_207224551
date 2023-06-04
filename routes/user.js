@@ -46,7 +46,12 @@ router.get('/favorites', async (req,res,next) => {
     let recipes_id_array = [];
     recipes_id.map((element) => recipes_id_array.push(element.recipe_id)); //extracting the recipe ids into array
     const results = await recipe_utils.getRecipesPreview(user_id, recipes_id_array, true);
-    res.status(200).send(results);
+    if(results.length == 0){
+      throw { status: 404, message: "no results were found" };
+    }
+    else{
+      res.status(200).send(results);
+    }
   } catch(error){
     next(error); 
   }
@@ -83,8 +88,12 @@ router.get('/myRecipes', async (req,res,next) => {
     const myRecipes = await user_utils.getmyRecipes(user_id);
     let myRecipes_array = [];
     myRecipes.map((element) => myRecipes_array.push({recipe_id: element.recipe_id , title: element.title, readyInMinutes: element.readyInMinutes, image: element.image, vegan: element.vegan , vegetarian: element.vegetarian, glutenFree: element.glutenFree})); 
-    //const results = await recipe_utils.getRecipesPreview(recipes_id_array);
-    res.status(200).send(myRecipes_array);
+    if (myRecipes_array.length === 0){
+      throw { status: 404, message: "no results were found" };
+    }
+    else{
+      res.status(200).send(myRecipes_array);
+    }
   } catch(error){
     next(error); 
   }
@@ -96,7 +105,7 @@ router.get('/myFamilyRecipes', async (req,res,next) => {
     let recipes = await DButils.execQuery(`SELECT * from familyrecipes WHERE user_id='${user_id}'`);
 
     if (recipes.length === 0){
-      res.status(404).send("no results were found.");
+      throw { status: 404, message: "no results were found" };
     }
     else{
       res.status(200).send(recipes);

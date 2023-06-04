@@ -103,7 +103,9 @@ paths:
                 items:
                   $ref: '#/components/schemas/FamilyRecipe'
         "404":
-          description: no results were found.
+          description: no results
+        "401":
+          description: user is not authorized
       security:
       - cookieAuth: []
   /users/myRecipes:
@@ -121,6 +123,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/RecipePreview'
+        "404":
+          description: no results
         "401":
           description: user is not authorized
       security:
@@ -157,6 +161,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/RecipePreview'
+        "404":
+          description: no results
         "401":
           description: user is not authorized
       security:
@@ -238,7 +244,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecipePreview'
         "404":
-          description: no results were found. 
+          description: no results
   /recipes/{recipeId}:
     get:
       tags:
@@ -262,7 +268,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecipePreview'
         "404":
-          description: recipeId is not exists
+          description: recipeId not exists
 components:
   schemas:
     User:
