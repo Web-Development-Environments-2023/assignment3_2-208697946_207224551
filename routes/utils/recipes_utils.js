@@ -85,8 +85,11 @@ async function getRandomRecipes() {
     let random_recipes_array = [];
     random_recipes_array = random_recipes.data.recipes;
     const newArray = random_recipes_array.map(item => {
-        return { id: item.id, title: item.title, readyInMinutes: item.readyInMinutes, image: item.image, popularity: item.aggregateLikes,vegan: item.vegan, vegetarian:item.vegetarian, glutenFree: item.glutenFree };
-      });
+             return item.id;
+           });
+    // const newArray = random_recipes_array.map(item => {
+    //     return { id: item.id, title: item.title, readyInMinutes: item.readyInMinutes, image: item.image, popularity: item.aggregateLikes,vegan: item.vegan, vegetarian:item.vegetarian, glutenFree: item.glutenFree };
+    //   });
     return newArray;
     
 }

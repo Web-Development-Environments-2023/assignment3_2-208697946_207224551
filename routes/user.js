@@ -28,7 +28,10 @@ router.use(async function (req, res, next) {
 router.post('/favorites', async (req,res,next) => {
   try{
     const user_id = req.session.user_id;
+    console.log(user_id);
     const recipe_id = req.body.recipeId;
+    console.log(recipe_id);
+
     await user_utils.markAsFavorite(user_id,recipe_id);
     res.status(200).send("The Recipe successfully saved as favorite");
     } catch(error){
@@ -42,7 +45,9 @@ router.post('/favorites', async (req,res,next) => {
 router.get('/favorites', async (req,res,next) => {
   try{
     const user_id = req.session.user_id;
+    console.log(user_id);
     const recipes_id = await user_utils.getFavoriteRecipes(user_id);
+    console.log(recipes_id);
     let recipes_id_array = [];
     recipes_id.map((element) => recipes_id_array.push(element.recipe_id)); //extracting the recipe ids into array
     const results = await recipe_utils.getRecipesPreview(user_id, recipes_id_array, true);
@@ -87,7 +92,7 @@ router.get('/myRecipes', async (req,res,next) => {
     const user_id = req.session.user_id;
     const myRecipes = await user_utils.getmyRecipes(user_id);
     let myRecipes_array = [];
-    myRecipes.map((element) => myRecipes_array.push({recipe_id: element.recipe_id , title: element.title, readyInMinutes: element.readyInMinutes, image: element.image, vegan: element.vegan , vegetarian: element.vegetarian, glutenFree: element.glutenFree})); 
+    myRecipes.map((element) => myRecipes_array.push({id: element.recipe_id , title: element.title, readyInMinutes: element.readyInMinutes, image: element.image, vegan: element.vegan , vegetarian: element.vegetarian, glutenFree: element.glutenFree})); 
     if (myRecipes_array.length === 0){
       throw { status: 404, message: "no results were found" };
     }

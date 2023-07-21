@@ -17,15 +17,15 @@ tags:
 - name: Recipes
   description: All reciepes general info
 paths:
-  /recipes/main:
+  /recipes/random:
     get:
       tags:
       - Recipes
-      summary: Main page of the site
-      description: display 3 random recipes. for logged users - 3 recent viewed recipes, for un-logged users - register/login button. 
+      summary: random recipes
+      description: get 3 random recipes to display on main page. 
       responses:
         "200":
-          description: main page loaded successfuly
+          description: got 3 random recipes successfuly
           content:
             application/json:
               schema:
@@ -34,6 +34,25 @@ paths:
                   $ref: '#/components/schemas/RecipePreview'
         "401":
           description: error loading main page.
+      security:
+      - cookieAuth: []
+  /recipes/lastWatched:
+    get:
+      tags:
+      - Recipes
+      summary: last 3 recipes watched by the user
+      description: last 3 recipes watched by the user to display on main page. 
+      responses:
+        "200":
+          description: got last watched recipes successfuly
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipePreview'
+        "404":
+          description: no results
       security:
       - cookieAuth: []
   /register:

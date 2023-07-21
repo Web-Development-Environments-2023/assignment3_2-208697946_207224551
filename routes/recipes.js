@@ -9,9 +9,23 @@ router.get("/", (req, res) => res.send("im here"));
 /**
  * This path returns main page 
  */
-router.get("/main", async (req, res, next) => {
+router.get("/random", async (req, res, next) => {
   try {
+    console.log(req.session);
+    console.log(req.session.user_id);
+
     const random_recipes = await recipes_utils.getRandomRecipes();
+    let recipes = await recipes_utils.getRecipesPreview(req.session.user_id, random_recipes);
+    res.status(200).send(recipes);
+    
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/lastWatched", async (req, res, next) => {
+  try {
+
     if (req.session && req.session.user_id) {
       const query = 
       `SELECT recipe_id, time
@@ -24,10 +38,10 @@ router.get("/main", async (req, res, next) => {
        const lastThreeRecipesids = result.map((item) => item.recipe_id);
        const lastThreeRecipes = await recipes_utils.getRecipesPreview(req.session.user_id, lastThreeRecipesids);
       
-       res.status(200).send({random_recipes, lastThreeRecipes});
+       res.status(200).send(lastThreeRecipes);
     }
     else{
-      res.status(200).send(random_recipes);
+      throw { status: 404, message: "no results were found" };
     }
     
   } catch (error) {
