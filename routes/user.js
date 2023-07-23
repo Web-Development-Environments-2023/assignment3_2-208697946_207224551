@@ -107,7 +107,7 @@ router.get('/myRecipes', async (req,res,next) => {
 router.get('/myFamilyRecipes', async (req,res,next) => {
   try{
     const user_id = req.session.user_id;
-    let recipes = await DButils.execQuery(`SELECT * from familyrecipes WHERE user_id='${user_id}'`);
+    let recipes = await DButils.execQuery(`SELECT title, image, owner, WhenToCook ,ingredients, instructions from familyrecipes WHERE user_id='${user_id}'`);
 
     if (recipes.length === 0){
       throw { status: 404, message: "no results were found" };
